@@ -42,7 +42,42 @@ Now, the OrderServiceSOP is solely responsible for managing orders, while the In
 ### 2. Open/Closed Principle (OCP)
 Software entities should be open for extension but closed for modification.
 ##### Example Case:
-// TODO
+- Before Implementation
+```go
+func ApplyDiscount(product entity.Product, isVIP bool) float64 {
+    if isVIP {
+        return product.Price * 0.20 // 20% discount for VIP
+    }
+
+    return product.Price * 0.10 // 10% discount otherwise
+}
+
+```
+Imagine you have a simple discount system that applies a 10% discount to all products. Later, you want to add a special 20% discount for VIP customers.
+
+- After Implementation
+```go
+type DiscountRule interface {
+    ApplyDiscount(product entity.Product) float64
+}
+
+type StandardDiscount struct{}
+
+func (sd StandardDiscount) ApplyDiscount(product entity.Product) float64 {
+    return product.Price * 0.10 // 10% discount
+}
+
+type VIPDiscount struct{}
+
+func (vd VIPDiscount) ApplyDiscount(product entity.Product) float64 {
+    return product.Price * 0.20 // 20% discount for VIP
+}
+
+func CalculatePrice(product entity.Product, rule DiscountRule) float64 {
+    return product.Price - rule.ApplyDiscount(product)
+}
+```
+Now, when you want to add a new discount rule, you simply create a new type that implements the `DiscountRule` interface. The existing code doesn't have to change, adhering to OCP.
 
 ### 3. Liskov Substitution Principle (LSP)
 Subtypes must be substitutable for their base types without altering the correctness of the program.
