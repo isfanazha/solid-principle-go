@@ -161,7 +161,42 @@ This means that, if in the future you introduce another product type with a diff
 ### 4. Interface Segregation Principle (ISP)
 No client should be forced to depend on interfaces it does not use.
 ##### Example Case:
-// TODO
+- Before Implementation
+```go
+type UserManagerNotISP interface {
+    Register(username, password string) error
+    Login(username, password string) (*entity.User, error)
+    UpdateProfile(userID int, profile entity.Profile) error
+    DeleteAccount(userID int) error
+    GetUserOrders(userID int) ([]entity.Order, error)
+}
+```
+`UserManagerNotISP` interface handles everything related to a user - registration, login, profile updating, account deletion, and fetching orders.
+If a component is only interested in handling the registration, it still has to know about other methods, which is unnecessary.
+- After Implementation
+```go
+type UserRegistrar interface {
+    Register(username, password string) error
+}
+
+type UserAuthenticator interface {
+    Login(username, password string) (*entity.User, error)
+}
+
+type UserProfileManager interface {
+    UpdateProfile(userID int, profile entity.Profile) error
+}
+
+type UserAccountManager interface {
+    DeleteAccount(userID int) error
+}
+
+type UserOrderViewer interface {
+    GetUserOrders(userID int) ([]entity.Order, error)
+}
+```
+With this breakdown, every component or module in the system can depend solely on the aspects it truly requires,
+which makes the application cleaner, more maintainable, and potentially less error-prone.
 
 ### 5. Dependency Inversion Principle (DIP)
 High-level modules should not depend on low-level modules. Both should depend on abstractions.
