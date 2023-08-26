@@ -201,4 +201,58 @@ which makes the application cleaner, more maintainable, and potentially less err
 ### 5. Dependency Inversion Principle (DIP)
 High-level modules should not depend on low-level modules. Both should depend on abstractions.
 ##### Example Case:
-// TODO
+- Before Implementation
+```go
+type EmailNotifierNotDIP struct {
+    // some fields for email configuration
+}
+
+func (en *EmailNotifierNotDIP) SendEmail(to string, subject string, body string) {
+    // logic to send an email
+}
+
+type OrderProcessorNotDIP struct {
+    notifier EmailNotifierNotDIP
+}
+
+func (op *OrderProcessorNotDIP) CompletePurchase(userEmail string, product string) {
+    // logic to complete purchase
+    op.notifier.SendEmail(userEmail, "Purchase Completed", "Thank you for purchasing "+product)
+}
+```
+The `OrderProcessor` is tightly coupled with the `EmailNotifier`.
+If we decide to notify the user through another medium, like SMS or push notifications, this design would require significant changes to `OrderProcessor`.
+
+- After Implementation
+```go
+type Notifier interface {
+    Notify(to string, subject string, message string)
+}
+
+type EmailNotifier struct {
+    // some fields for email configuration
+}
+
+func (en *EmailNotifier) Notify(to string, subject string, message string) {
+    // logic to send an email
+}
+
+type SMSNotifier struct {
+    // some fields for SMS configuration
+}
+
+func (sn *SMSNotifier) Notify(to string, subject string, message string) {
+    // logic to send an SMS (Note: In reality, SMS might not have a "subject", this is just for illustrative purposes)
+}
+
+type OrderProcessor struct {
+    notifier Notifier // depends on the interface, not concrete implementation
+}
+
+func (op *OrderProcessor) CompletePurchase(userContact string, product string) {
+    // logic to complete purchase
+    op.notifier.Notify(userContact, "Purchase Completed", "Thank you for purchasing "+product)
+}
+```
+The `OrderProcessor` depends on the abstraction (`Notifier`) and not on the concrete implementation (`EmailNotifier` or `SMSNotifier`).
+If we decide to change our notification method, or even introduce a new one, we can do so easily without altering `OrderProcessor` — we simply introduce a new implementation of the Notifier interface.
